@@ -64,6 +64,14 @@ If your Astro project has specific requirements, modify [`Dockerfile`](Dockerfil
 - Add additional build steps
 - Modify port number (default 4321)
 
+**Note:** The Dockerfile uses `npm install` instead of `npm ci` to support projects without a `package-lock.json` file. For faster, reproducible builds in production, you can:
+
+1. Generate a package-lock.json: `npm install`
+2. Commit it: `git add package-lock.json`
+3. Update Dockerfile to use `npm ci` for better performance
+
+See [BUILD_TROUBLESHOOTING.md](BUILD_TROUBLESHOOTING.md) for more details.
+
 ### 4. Automated Build and Push
 
 When pushing to main/master branch, GitHub Actions will automatically:
