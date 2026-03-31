@@ -73,14 +73,6 @@ pull_image() {
     
     log_info "Pulling image: ${full_image_name}"
     
-    # Login to ghcr.io
-    if ! docker info 2>/dev/null | grep -q "Username"; then
-        log_warn "Docker not logged in, trying to login to ghcr.io..."
-        echo "${GHCR_TOKEN}" | docker login ghcr.io -u "${GHCR_USERNAME}" --password-stdin 2>/dev/null || {
-            log_warn "Automatic login failed, please ensure you have run: docker login ghcr.io"
-        }
-    fi
-    
     # Pull image
     if ! docker pull "${full_image_name}"; then
         log_error "Failed to pull image: ${full_image_name}"
