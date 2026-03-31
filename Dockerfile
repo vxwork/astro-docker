@@ -3,19 +3,10 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Clone Astro framework repository
-RUN apk add --no-cache git && \
-    git clone --depth 1 https://github.com/withastro/astro.git astro-framework
+# Install git (needed for potential future use)
+RUN apk add --no-cache git
 
-# Install Astro framework dependencies
-WORKDIR /app/astro-framework
-RUN npm install
-
-# Build Astro framework (optional, if needed for examples)
-RUN npm run build || true
-
-# Copy package files for our app
-WORKDIR /app
+# Copy package files
 COPY package*.json ./
 
 # Install app dependencies
