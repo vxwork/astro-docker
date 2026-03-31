@@ -32,9 +32,10 @@ WORKDIR /app
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/package.json ./
+COPY --from=builder /app/astro.config.mjs ./astro.config.mjs
 
-# Install production dependencies
-RUN npm install --omit=dev && npm cache clean --force
+# Install serve package globally for static file serving
+RUN npm install -g serve && npm cache clean --force
 
 # Expose port
 EXPOSE 4321
@@ -43,5 +44,5 @@ EXPOSE 4321
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:4321/ || exit 1
 
-# Start the application with host binding to 0.0.0.0
-CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0"]
+# Start the application using serve to host static files
+CMD ["serve", "dist", "-l", "4321", "--host", "0.0.0.0"]
