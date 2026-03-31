@@ -32,15 +32,15 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy package files for production
-COPY package*.json ./
+# Copy built application from builder stage first
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/public ./public
+
+# Copy package files for production (from builder stage where they were already copied)
+COPY --from=builder /app/package*.json ./
 
 # Install only production dependencies
 RUN npm install --omit=dev && npm cache clean --force
-
-# Copy built application from builder stage
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/public ./public
 
 # Expose port
 EXPOSE 4321
