@@ -1,0 +1,39 @@
+services:
+  astro:
+    image: ${REGISTRY:-ghcr.io}/${REPO_OWNER:-owner}/${REPO_NAME:-repo}:${IMAGE_TAG:-latest}
+    container_name: astro-app
+    restart: unless-stopped
+    ports:
+      - "4321:4321"
+    environment:
+      - NODE_ENV=production
+      - HOST=0.0.0.0
+      - PORT=4321
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:4321/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - astro-network
+    # 可选：挂载日志目录
+    volumes:
+      - astro-logs:/app/logs
+    # 可选：资源限制
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
+networks:
+  astro-network:
+    driver: bridge
+
+volumes:
+  astro-logs:
+    driver: local
