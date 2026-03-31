@@ -1,8 +1,8 @@
-# Astro Docker Deployment Script (Windows PowerShell Version)
-# Usage:
-#   .\deploy.ps1              # Use latest main branch image
-#   .\deploy.ps1 abc12345     # Use specified SHA version (8 characters)
-#   .\deploy.ps1 latest       # Use latest tag
+# Astro Docker 部署脚本 (Windows PowerShell 版本)
+# 使用方法:
+#   .\deploy.ps1              # 使用最新的 main 分支镜像
+#   .\deploy.ps1 abc12345     # 使用指定的 SHA 版本 (8 位)
+#   .\deploy.ps1 latest       # 使用 latest 标签
 
 param(
     [Parameter(Position=0)]
@@ -11,7 +11,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-# Configuration variables
+# 配置变量
 $Registry = "ghcr.io"
 $RepoOwner = $env:REPO_OWNER
 $RepoName = $env:REPO_NAME
@@ -19,7 +19,7 @@ $ImageName = "${Registry}/${RepoOwner}/${RepoName}"
 $ContainerName = "astro-app"
 $ComposeProjectName = "astro"
 
-# Color output functions
+# 颜色输出函数
 function Write-Info {
     param([string]$Message)
     Write-Host "[INFO] $Message" -ForegroundColor Green
@@ -35,133 +35,133 @@ function Write-Error-Custom {
     Write-Host "[ERROR] $Message" -ForegroundColor Red
 }
 
-# Get image tag
+# 获取镜像标签
 function Get-ImageTag {
     param([string]$ShaVersion)
     
     if ([string]::IsNullOrEmpty($ShaVersion)) {
-        Write-Info "No version specified, attempting to get latest commit SHA from GitHub..."
+        Write-Info "未指定版本，尝试从 GitHub 获取最新的提交 SHA..."
         
         try {
             $response = Invoke-RestMethod -Uri "https://api.github.com/repos/${RepoOwner}/${RepoName}/commits?sha=main&per_page=1" -UseBasicParsing
             $LatestSha = $response[0].sha.Substring(0, 8)
-            Write-Info "Found latest commit SHA: ${LatestSha}"
+            Write-Info "找到最新提交 SHA: ${LatestSha}"
             return $LatestSha
         } catch {
-            Write-Error-Custom "Failed to get latest commit SHA, please specify version manually"
+            Write-Error-Custom "无法获取最新提交 SHA，请手动指定版本"
             exit 1
         }
     } elseif ($ShaVersion -eq "latest") {
-        Write-Info "Using latest tag"
+        Write-Info "使用 latest 标签"
         return "latest"
     } else {
-        # Validate SHA format (8 hexadecimal characters)
+        # 验证 SHA 格式 (8 位十六进制)
         if ($ShaVersion -notmatch '^[a-f0-9]{8}$') {
-            Write-Error-Custom "Invalid SHA format: $ShaVersion (should be 8 hexadecimal characters)"
+            Write-Error-Custom "无效的 SHA 格式：$ShaVersion (应该是 8 位十六进制)"
             exit 1
         }
-        Write-Info "Using specified version: $ShaVersion"
+        Write-Info "使用指定版本：$ShaVersion"
         return $ShaVersion
     }
 }
 
-# Pull image
+# 拉取镜像
 function Pull-Image {
     param([string]$Tag)
     $FullImageName = "${ImageName}:${Tag}"
     
-    Write-Info "Pulling image: ${FullImageName}"
+    Write-Info "正在拉取镜像：${FullImageName}"
     
-    # Check if Docker is logged in
+    # 检查 Docker 是否登录
     $dockerInfo = docker info 2>&1 | Out-String
     if ($dockerInfo -notmatch "Username") {
-        Write-Warn "Docker not logged in, attempting to log in to ghcr.io..."
+        Write-Warn "Docker 未登录，正在尝试登录 ghcr.io..."
         try {
-            $token = Read-Host "Enter GHCR Token"
-            $username = Read-Host "Enter GHCR Username"
+            $token = Read-Host "请输入 GHCR Token"
+            $username = Read-Host "请输入 GHCR 用户名"
             echo $token | docker login ghcr.io -u $username --password-stdin 2>$null
         } catch {
-            Write-Warn "Automatic login failed, please manually execute: docker login ghcr.io"
+            Write-Warn "自动登录失败，请手动执行：docker login ghcr.io"
         }
     }
     
-    # Pull image
+    # 拉取镜像
     docker pull $FullImageName
     if ($LASTEXITCODE -ne 0) {
-        Write-Error-Custom "Failed to pull image: ${FullImageName}"
+        Write-Error-Custom "拉取镜像失败：${FullImageName}"
         exit 1
     }
     
-    Write-Info "Image pulled successfully: ${FullImageName}"
+    Write-Info "镜像拉取成功：${FullImageName}"
 }
 
-# Stop and clean up old containers
+# 停止并清理旧容器
 function Cleanup-OldContainers {
-    Write-Info "Checking and cleaning up old containers..."
+    Write-Info "检查并清理旧的容器..."
     
     $containers = docker ps -a --format "{{.Names}}" | Select-String "^${ContainerName}$"
     if ($containers) {
-        Write-Warn "Running containers found, stopping..."
+        Write-Warn "发现运行中的容器，正在停止..."
         docker compose -p $ComposeProjectName down
-        Write-Info "Old containers stopped"
+        Write-Info "旧容器已停止"
     }
 }
 
-# Start new container
+# 启动新容器
 function Start-Container {
     param([string]$Tag)
     
-    Write-Info "Starting new container (image tag: ${Tag})..."
+    Write-Info "正在启动新容器 (镜像标签：${Tag})..."
     
-    # Set environment variables
+    # 设置环境变量
     $env:IMAGE_TAG = $Tag
     $env:REGISTRY = $Registry
     $env:REPO_OWNER = $RepoOwner
     $env:REPO_NAME = $RepoName
     
-    # Use docker compose to start
-    Write-Info "Using docker compose to start..."
+    # 使用 docker compose 启动
+    Write-Info "使用 docker compose 启动..."
     docker compose -p $ComposeProjectName up -d
     
     if ($LASTEXITCODE -ne 0) {
-        Write-Error-Custom "Container failed to start, please check logs: docker logs ${ContainerName}"
+        Write-Error-Custom "容器启动失败，请查看日志：docker logs ${ContainerName}"
         exit 1
     }
     
-    # Wait for container to start
+    # 等待容器启动
     Start-Sleep -Seconds 5
     
-    # Check container status
+    # 检查容器状态
     $runningContainers = docker ps --format "{{.Names}}" | Select-String "^${ContainerName}$"
     if ($runningContainers) {
-        Write-Info "✅ Container started successfully!"
-        Write-Info "Container name: ${ContainerName}"
-        Write-Info "Image: ${ImageName}:${Tag}"
-        Write-Info "Access URL: http://localhost:4321"
+        Write-Info "✅ 容器启动成功!"
+        Write-Info "容器名称：${ContainerName}"
+        Write-Info "镜像：${ImageName}:${Tag}"
+        Write-Info "访问地址：http://localhost:4321"
     } else {
-        Write-Error-Custom "❌ Container failed to start, please check logs: docker logs ${ContainerName}"
+        Write-Error-Custom "❌ 容器启动失败，请查看日志：docker logs ${ContainerName}"
         exit 1
     }
 }
 
-# Main function
+# 主函数
 function Main {
-    Write-Info "🚀 Starting Astro app deployment..."
+    Write-Info "🚀 开始部署 Astro 应用..."
     
-    # Get image tag
+    # 获取镜像标签
     $imageTag = Get-ImageTag -ShaVersion $ShaVersion
     
-    # Clean up old containers
+    # 清理旧容器
     Cleanup-OldContainers
     
-    # Pull image
+    # 拉取镜像
     Pull-Image -Tag $imageTag
     
-    # Start new container
+    # 启动新容器
     Start-Container -Tag $imageTag
     
-    Write-Info "🎉 Deployment completed!"
+    Write-Info "🎉 部署完成!"
 }
 
-# Execute main function
+# 执行主函数
 Main
