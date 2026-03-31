@@ -1,113 +1,115 @@
-# Astro Docker 部署方案
+# Astro Docker Deployment Solution
 
-本项目提供了一套完整的 Astro 应用 Docker 构建和部署解决方案，支持：
+A comprehensive Docker-based build and deployment solution for Astro applications, featuring:
 
-- ✅ 自动构建包含 8 位 SHA 的 Docker 镜像
-- ✅ 推送镜像到 GitHub Container Registry (ghcr.io)
-- ✅ GitHub Actions 自动化工作流
-- ✅ 一键部署脚本 (`deploy.sh`)
-- ✅ Docker Compose 配置
+- ✅ Automated Docker image builds with 8-character SHA tags
+- ✅ Push to GitHub Container Registry (ghcr.io)
+- ✅ GitHub Actions CI/CD workflows
+- ✅ One-click deployment scripts (`deploy.sh`)
+- ✅ Docker Compose orchestration
 
-## 📦 文件结构
+## 📦 Project Structure
 
 ```
 .
-├── Dockerfile                          # Docker 构建文件
-├── docker-compose.yml                  # Docker Compose 配置
-├── deploy.sh                           # 部署脚本
-├── .dockerignore                       # Docker 忽略文件
-├── .env.example                        # 环境变量示例
+├── Dockerfile                          # Multi-stage Docker build
+├── docker-compose.yml                  # Docker Compose configuration
+├── deploy.sh                           # Deployment script (Linux/Mac)
+├── deploy.ps1                          # Deployment script (Windows)
+├── .dockerignore                       # Docker build context optimization
+├── .env.example                        # Environment variables template
+├── .gitignore                          # Git ignore rules
 └── .github/
     └── workflows/
-        └── docker-build.yml           # GitHub Actions 工作流
+        └── docker-build.yml           # GitHub Actions workflow
 ```
 
-## 🚀 快速开始
+## 🚀 Quick Start
 
-### 1. 准备工作
+### 1. Prerequisites
 
-确保你已经安装并配置好以下工具：
+Ensure you have the following installed and configured:
 
-- [Astro](https://astro.build/) 项目
-- Docker 和 Docker Compose
-- GitHub 账号
+- [Astro](https://astro.build/) project
+- Docker and Docker Compose
+- GitHub account
 
-### 2. 配置 GitHub Secrets
+### 2. Configure GitHub Secrets
 
-在 GitHub 仓库中，GitHub Actions 会自动使用 `GITHUB_TOKEN`，无需额外配置。
+GitHub Actions will automatically use `GITHUB_TOKEN` in your repository—no additional configuration required.
 
-如果需要手动登录 GHCR，创建 Personal Access Token：
+For manual GHCR login, create a Personal Access Token:
 
-1. 访问 GitHub Settings > Developer settings > Personal access tokens
-2. 生成一个新的 token，勾选 `write:packages` 权限
-3. 在仓库 Settings > Secrets and variables > Actions 中添加：
-   - `GHCR_USERNAME`: 你的 GitHub 用户名
-   - `GHCR_TOKEN`: 生成的 token
+1. Go to GitHub Settings > Developer settings > Personal access tokens
+2. Generate a new token with `write:packages` permission
+3. Add to repository Settings > Secrets and variables > Actions:
+   - `GHCR_USERNAME`: Your GitHub username
+   - `GHCR_TOKEN`: Generated token
 
-### 3. 自定义配置
+### 3. Custom Configuration
 
-#### 修改 `.env.example` 为 `.env`
+#### Copy `.env.example` to `.env`
 
 ```bash
 cp .env.example .env
 ```
 
-编辑 `.env` 文件，填入你的 GitHub 用户名和仓库信息。
+Edit `.env` file with your GitHub username and repository information.
 
-#### 调整 Dockerfile（可选）
+#### Adjust Dockerfile (Optional)
 
-如果你的 Astro 项目有特殊需求，可以修改 [`Dockerfile`](Dockerfile)：
+If your Astro project has specific requirements, modify [`Dockerfile`](Dockerfile):
 
-- 修改 Node.js 版本（当前使用 node:20-alpine）
-- 添加额外的构建步骤
-- 修改端口号（默认 4321）
+- Change Node.js version (currently using node:20-alpine)
+- Add additional build steps
+- Modify port number (default 4321)
 
-### 4. 自动构建和推送
+### 4. Automated Build and Push
 
-推送到 main/master 分支时，GitHub Actions 会自动：
+When pushing to main/master branch, GitHub Actions will automatically:
 
-1. 构建 Docker 镜像
-2. 生成包含 8 位提交 SHA 的标签
-3. 推送到 ghcr.io
+1. Build Docker image
+2. Generate tag with 8-character commit SHA
+3. Push to ghcr.io
 
-例如：`ghcr.io/username/repo:abc12345`
+Example: `ghcr.io/username/repo:abc12345`
 
-## 🛠️ 使用方法
+## 🛠️ Usage
 
-### 方式一：使用部署脚本（推荐）
+### Method 1: Using Deployment Script (Recommended)
 
 ```bash
-# 自动获取最新版本并部署
+# Auto-detect and deploy latest version
 ./deploy.sh
 
-# 部署指定 SHA 版本（8 位）
+# Deploy specific SHA version (8 characters)
 ./deploy.sh abc12345
 
-# 使用 latest 标签
+# Use latest tag
 ./deploy.sh latest
 ```
 
-部署脚本会：
-1. 自动从 ghcr.io 拉取镜像
-2. 停止旧的容器
-3. 使用 Docker Compose 启动新容器
+The deployment script will:
+1. Automatically pull image from ghcr.io
+2. Stop old containers
+3. Start new container using Docker Compose
 
-### 方式二：手动使用 Docker Compose
+### Method 2: Manual Docker Compose
 
 ```bash
-# 设置环境变量
+# Set environment variables
 export IMAGE_TAG=abc12345
 export REPO_OWNER=your-username
 export REPO_NAME=your-repo
 
-# 拉取镜像
+# Pull image
 docker pull ghcr.io/${REPO_OWNER}/${REPO_NAME}:${IMAGE_TAG}
 
-# 启动容器
+# Start container
 docker compose up -d
 ```
 
-### 方式三：直接使用 Docker
+### Method 3: Direct Docker
 
 ```bash
 docker run -d \
@@ -117,135 +119,135 @@ docker run -d \
   ghcr.io/your-username/your-repo:abc12345
 ```
 
-## 📝 配置说明
+## 📝 Configuration
 
-### Docker Compose 环境变量
+### Docker Compose Environment Variables
 
-| 变量名 | 说明 | 默认值 |
-|--------|------|--------|
-| `REGISTRY` | 镜像仓库地址 | `ghcr.io` |
-| `REPO_OWNER` | GitHub 用户名或组织 | 从 git remote 获取 |
-| `REPO_NAME` | 仓库名称 | 从 git remote 获取 |
-| `IMAGE_TAG` | 镜像标签（SHA 或 latest） | `latest` |
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `REGISTRY` | Image registry URL | `ghcr.io` |
+| `REPO_OWNER` | GitHub username or organization | From git remote |
+| `REPO_NAME` | Repository name | From git remote |
+| `IMAGE_TAG` | Image tag (SHA or latest) | `latest` |
 
-### 端口映射
+### Port Mapping
 
-默认情况下，Astro 应用在 **4321** 端口运行。
+By default, Astro application runs on port **4321**.
 
-如需修改，编辑 [`docker-compose.yml`](docker-compose.yml)：
+To modify, edit [`docker-compose.yml`](docker-compose.yml):
 
 ```yaml
 ports:
-  - "8080:4321"  # 将外部 8080 端口映射到内部 4321 端口
+  - "8080:4321"  # Map external port 8080 to internal port 4321
 ```
 
-## 🔍 验证部署
+## 🔍 Verify Deployment
 
 ```bash
-# 查看容器状态
+# Check container status
 docker ps
 
-# 查看日志
+# View logs
 docker logs astro-app
 
-# 进入容器
+# Enter container
 docker exec -it astro-app sh
 
-# 健康检查
+# Health check
 curl http://localhost:4321
 ```
 
-## 🔄 更新策略
+## 🔄 Update Strategy
 
-### 自动更新（推荐）
+### Automatic Update (Recommended)
 
-使用部署脚本自动获取最新版本：
+Use deployment script to auto-fetch latest version:
 
 ```bash
 ./deploy.sh
 ```
 
-### 手动更新
+### Manual Update
 
 ```bash
-# 停止旧容器
+# Stop old container
 docker compose down
 
-# 拉取新镜像
+# Pull new image
 docker pull ghcr.io/your-username/your-repo:newsha
 
-# 启动新容器
+# Start container
 docker compose up -d
 ```
 
-### 回滚到旧版本
+### Rollback to Previous Version
 
 ```bash
-# 使用之前的 SHA 重新部署
+# Redeploy with previous SHA
 ./deploy.sh oldsha123
 ```
 
-## 🐛 故障排查
+## 🐛 Troubleshooting
 
-### 无法拉取镜像
+### Unable to Pull Image
 
-确保已登录 GHCR：
+Ensure you're logged into GHCR:
 
 ```bash
 docker login ghcr.io
-# 输入 GitHub 用户名和 Personal Access Token
+# Enter GitHub username and Personal Access Token
 ```
 
-### 容器启动失败
+### Container Failed to Start
 
-查看日志：
+Check logs:
 
 ```bash
 docker logs astro-app
 ```
 
-### 端口冲突
+### Port Conflict
 
-修改 [`docker-compose.yml`](docker-compose.yml) 中的端口映射：
+Modify port mapping in [`docker-compose.yml`](docker-compose.yml):
 
 ```yaml
 ports:
-  - "新端口:4321"
+  - "NEW_PORT:4321"
 ```
 
-## 📊 GitHub Actions 工作流说明
+## 📊 GitHub Actions Workflow
 
-工作流文件：[`.github/workflows/docker-build.yml`](.github/workflows/docker-build.yml)
+Workflow file: [`.github/workflows/docker-build.yml`](.github/workflows/docker-build.yml)
 
-触发条件：
-- Push 到 main/master 分支
-- 创建 tag
+Triggers:
+- Push to main/master branch
+- Tag creation
 - Pull Request
 
-构建内容：
-- 多平台镜像（amd64, arm64）
-- 包含 8 位 SHA 的标签
-- 最新提交标签
-- Semver 标签（如果是 tag 触发）
+Build outputs:
+- Multi-platform images (amd64, arm64)
+- 8-character SHA tags
+- Latest commit tag
+- Semver tags (if triggered by tag)
 
-## 🔐 安全建议
+## 🔐 Security Recommendations
 
-1. **不要提交敏感信息**：确保 `.env` 文件在 `.gitignore` 中
-2. **使用 Secrets**：在 GitHub Actions 中使用 Secrets 管理凭证
-3. **限制包可见性**：在 GitHub 仓库设置中控制 Container packages 的可见性
-4. **定期更新 Token**：定期更换 Personal Access Token
+1. **Never commit sensitive information**: Ensure `.env` is in `.gitignore`
+2. **Use Secrets**: Manage credentials via GitHub Actions Secrets
+3. **Limit package visibility**: Control Container packages visibility in repository settings
+4. **Rotate tokens regularly**: Periodically update Personal Access Tokens
 
-## 📚 相关资源
+## 📚 Related Resources
 
-- [Astro 官方文档](https://docs.astro.build/)
-- [Docker 文档](https://docs.docker.com/)
+- [Astro Documentation](https://docs.astro.build/)
+- [Docker Documentation](https://docs.docker.com/)
 - [GitHub Container Registry](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry)
-- [GitHub Actions 文档](https://docs.github.com/en/actions)
+- [GitHub Actions Documentation](https://docs.github.com/en/actions)
 
-## 🤝 贡献
+## 🤝 Contributing
 
-欢迎提交 Issue 和 Pull Request！
+Issues and Pull Requests are welcome!
 
-## 📄 许可证
+## 📄 License
 
 MIT License

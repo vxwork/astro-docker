@@ -1,28 +1,28 @@
-# 快速参考指南
+# Quick Start Guide
 
-## 📋 使用流程
+## 📋 Workflow
 
-### 1. 首次设置
+### 1. Initial Setup
 
 ```bash
-# 复制环境变量示例文件
+# Copy environment variables template
 cp .env.example .env
 
-# 编辑 .env 文件，填入你的 GitHub 信息
+# Edit .env file with your GitHub information
 # REPO_OWNER=your-github-username
 # REPO_NAME=your-repo-name
 ```
 
-### 2. 配置 GitHub
+### 2. Configure GitHub
 
-在 GitHub 仓库 Settings → Secrets and variables → Actions 中确保有：
-- `GITHUB_TOKEN` (自动提供，无需手动配置)
+In repository Settings → Secrets and variables → Actions, ensure:
+- `GITHUB_TOKEN` (automatically provided, no manual configuration needed)
 
-如需手动登录 GHCR，添加：
-- `GHCR_USERNAME`: 你的 GitHub 用户名
-- `GHCR_TOKEN`: Personal Access Token (需要 `write:packages` 权限)
+For manual GHCR login, add:
+- `GHCR_USERNAME`: Your GitHub username
+- `GHCR_TOKEN`: Personal Access Token (requires `write:packages` permission)
 
-### 3. 推送代码触发构建
+### 3. Push Code to Trigger Build
 
 ```bash
 git add .
@@ -30,211 +30,211 @@ git commit -m "Initial commit"
 git push origin main
 ```
 
-GitHub Actions 会自动构建并推送镜像到 ghcr.io
+GitHub Actions will automatically build and push the image to ghcr.io
 
-### 4. 部署应用
+### 4. Deploy Application
 
 #### Linux/Mac:
 
 ```bash
-# 自动部署最新版本
+# Auto-deploy latest version
 ./deploy.sh
 
-# 部署指定 SHA 版本
+# Deploy specific SHA version
 ./deploy.sh abc12345
 
-# 使用 latest 标签
+# Use latest tag
 ./deploy.sh latest
 ```
 
 #### Windows PowerShell:
 
 ```powershell
-# 自动部署最新版本
+# Auto-deploy latest version
 .\deploy.ps1
 
-# 部署指定 SHA 版本
+# Deploy specific SHA version
 .\deploy.ps1 abc12345
 
-# 使用 latest 标签
+# Use latest tag
 .\deploy.ps1 latest
 ```
 
-### 5. 验证部署
+### 5. Verify Deployment
 
 ```bash
-# 查看运行状态
+# Check running status
 docker ps
 
-# 访问应用
+# Access application
 curl http://localhost:4321
 
-# 查看日志
+# View logs
 docker logs astro-app
 ```
 
 ---
 
-## 🔧 常用命令
+## 🔧 Common Commands
 
-### Docker 相关
+### Docker Commands
 
 ```bash
-# 查看容器状态
+# Check container status
 docker ps
 
-# 停止容器
+# Stop container
 docker compose down
 
-# 启动容器
+# Start container
 docker compose up -d
 
-# 重启容器
+# Restart container
 docker compose restart
 
-# 查看日志
+# View logs
 docker logs -f astro-app
 
-# 进入容器
+# Enter container
 docker exec -it astro-app sh
 
-# 删除容器和镜像
+# Remove containers and images
 docker compose down -v
 ```
 
-### GitHub Actions 相关
+### GitHub Actions Commands
 
 ```bash
-# 手动触发工作流（需要安装 GitHub CLI）
+# Manually trigger workflow (requires GitHub CLI)
 gh workflow run docker-build.yml
 
-# 查看工作流运行记录
+# List workflow runs
 gh run list
 
-# 查看特定运行的日志
+# View logs for specific run
 gh run view <run-id> --log
 ```
 
 ---
 
-## 🏷️ 镜像标签说明
+## 🏷️ Image Tags Reference
 
-| 标签类型 | 示例 | 说明 |
-|---------|------|------|
-| SHA | `abc12345` | 8 位提交哈希，推荐用于生产环境 |
-| Branch | `main` | 分支名称，指向最新提交 |
-| Tag | `v1.0.0` | Git 标签，用于版本发布 |
-| Latest | `latest` | 最新构建（不推荐用于生产） |
+| Tag Type | Example | Description |
+|----------|---------|-------------|
+| SHA | `abc12345` | 8-character commit hash, recommended for production |
+| Branch | `main` | Branch name, points to latest commit |
+| Tag | `v1.0.0` | Git tag for versioned releases |
+| Latest | `latest` | Latest build (not recommended for production) |
 
 ---
 
-## 🚨 故障排查
+## 🚨 Troubleshooting
 
-### 问题：无法拉取镜像
+### Issue: Unable to Pull Image
 
-**解决方案：**
+**Solution:**
 ```bash
-# 登录 GHCR
+# Login to GHCR
 docker login ghcr.io
-# 输入 GitHub 用户名和 Personal Access Token
+# Enter GitHub username and Personal Access Token
 ```
 
-### 问题：端口被占用
+### Issue: Port Already in Use
 
-**解决方案：**
-修改 `docker-compose.yml`：
+**Solution:**
+Modify `docker-compose.yml`:
 ```yaml
 ports:
-  - "8080:4321"  # 改为其他端口
+  - "8080:4321"  # Change to different port
 ```
 
-### 问题：权限不足
+### Issue: Permission Denied
 
-**解决方案：**
+**Solution:**
 ```bash
-# Linux/Mac 给脚本添加执行权限
+# Linux/Mac: Add execute permission to script
 chmod +x deploy.sh
 
-# Windows 以管理员身份运行 PowerShell
+# Windows: Run PowerShell as Administrator
 ```
 
-### 问题：GitHub Actions 构建失败
+### Issue: GitHub Actions Build Failed
 
-**检查项：**
-1. 确认 `GITHUB_TOKEN` 权限足够
-2. 检查 Dockerfile 语法
-3. 查看 Actions 日志获取详细错误
+**Checklist:**
+1. Verify `GITHUB_TOKEN` has sufficient permissions
+2. Check Dockerfile syntax
+3. Review Actions logs for detailed errors
 
 ---
 
-## 📊 监控和维护
+## 📊 Monitoring and Maintenance
 
-### 健康检查
+### Health Checks
 
 ```bash
-# 检查容器健康状态
+# Check container health status
 docker inspect --format='{{.State.Health.Status}}' astro-app
 
-# 测试应用响应
+# Test application response
 curl -I http://localhost:4321
 ```
 
-### 资源使用
+### Resource Usage
 
 ```bash
-# 查看容器资源使用
+# Check container resource usage
 docker stats astro-app
 ```
 
-### 日志管理
+### Log Management
 
 ```bash
-# 实时查看日志
+# Real-time logs
 docker logs -f astro-app
 
-# 查看最近 100 行日志
+# Last 100 lines
 docker logs --tail 100 astro-app
 
-# 查看特定时间范围的日志
+# Logs since specific timestamp
 docker logs --since 2024-01-01T00:00:00 astro-app
 ```
 
 ---
 
-## 🔄 更新策略
+## 🔄 Update Strategy
 
-### 滚动更新
+### Rolling Update
 
 ```bash
-# 部署新版本
+# Deploy new version
 ./deploy.sh newsha123
 
-# 验证新版本的 SHA
+# Verify new version SHA
 docker inspect astro-app | grep Image
 ```
 
-### 回滚
+### Rollback
 
 ```bash
-# 回滚到之前的版本
+# Rollback to previous version
 ./deploy.sh oldsha456
 ```
 
 ---
 
-## 💡 最佳实践
+## 💡 Best Practices
 
-1. **生产环境使用固定 SHA**：不要使用 `latest` 标签
-2. **定期清理旧镜像**：避免占用过多存储空间
-3. **监控容器健康**：设置告警通知
-4. **备份重要数据**：如果有持久化数据，定期备份
-5. **测试后再部署**：在 staging 环境测试后再部署到生产
+1. **Use fixed SHA in production**: Avoid using `latest` tag
+2. **Clean up old images regularly**: Prevent excessive storage usage
+3. **Monitor container health**: Set up alerting notifications
+4. **Backup important data**: Regular backups if using persistent data
+5. **Test before deployment**: Test in staging environment before production
 
 ---
 
-## 📞 获取帮助
+## 📞 Getting Help
 
-- 查看完整文档：[README.md](README.md)
-- Astro 文档：https://docs.astro.build/
-- Docker 文档：https://docs.docker.com/
-- GitHub Actions 文档：https://docs.github.com/en/actions
+- Full documentation: [README.md](README.md)
+- Astro Docs: https://docs.astro.build/
+- Docker Docs: https://docs.docker.com/
+- GitHub Actions Docs: https://docs.github.com/en/actions
