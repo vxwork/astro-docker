@@ -10,8 +10,8 @@ set -e
 
 # Configuration variables
 REGISTRY="ghcr.io"
-REPO_OWNER="$(echo '${{ github.repository }}' | cut -d'/' -f1)"
-REPO_NAME="$(echo '${{ github.repository }}' | cut -d'/' -f2)"
+REPO_OWNER="vxwork"
+REPO_NAME="astro-docker"
 IMAGE_NAME="${REGISTRY}/${REPO_OWNER}/${REPO_NAME}"
 CONTAINER_NAME="astro-app"
 COMPOSE_PROJECT_NAME="astro"
@@ -23,15 +23,15 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 log_info() {
-    echo -e "${GREEN}[INFO]${NC} $1"
+    echo -e "${GREEN}[INFO]${NC} $1" >&2
 }
 
 log_warn() {
-    echo -e "${YELLOW}[WARN]${NC} $1"
+    echo -e "${YELLOW}[WARN]${NC} $1" >&2
 }
 
 log_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
+    echo -e "${RED}[ERROR]${NC} $1" >&2
 }
 
 # Get image tag

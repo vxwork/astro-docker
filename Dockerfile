@@ -40,5 +40,5 @@ EXPOSE 4321
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:4321/ || exit 1
 
-# Start the application
-CMD ["npm", "run", "preview"]
+# Start the application with host binding to 0.0.0.0
+CMD ["npm", "run", "preview", "--", "--host"]

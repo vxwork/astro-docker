@@ -1,6 +1,6 @@
 services:
   astro:
-    image: ${REGISTRY:-ghcr.io}/${REPO_OWNER:-owner}/${REPO_NAME:-repo}:${IMAGE_TAG:-latest}
+    image: ${REGISTRY:-ghcr.io}/${REPO_OWNER:-vxwork}/${REPO_NAME:-astro-docker}:${IMAGE_TAG:-latest}
     container_name: astro-app
     restart: unless-stopped
     ports:
