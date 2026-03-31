@@ -18,8 +18,8 @@ RUN ls -la && cat package.json
 RUN npm install
 
 # Copy any additional local source files if they exist
-COPY src/ ./src/ 2>/dev/null || true
-COPY public/ ./public/ 2>/dev/null || true
+COPY src ./src
+COPY public ./public
 
 # Build the application
 RUN npm run build
