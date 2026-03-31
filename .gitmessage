@@ -1,0 +1,105 @@
+# Commit Message Template
+
+## Format
+
+```
+<type>(<scope>): <subject>
+
+<body>
+
+<footer>
+```
+
+## Types
+
+- `feat`: A new feature
+- `fix`: A bug fix
+- `docs`: Documentation only changes
+- `style`: Changes that do not affect the meaning of the code (white-space, formatting, etc)
+- `refactor`: A code change that neither fixes a bug nor adds a feature
+- `perf`: A code change that improves performance
+- `test`: Adding missing tests or correcting existing tests
+- `build`: Changes that affect the build system or external dependencies
+- `ci`: Changes to CI configuration files and scripts
+- `chore`: Other changes that don't modify src or test files
+- `revert`: Reverts a previous commit
+
+## Examples
+
+### Feature
+```
+feat(docker): add multi-stage build support
+
+- Implemented multi-stage Docker build
+- Reduced final image size by 60%
+- Added health check configuration
+
+Closes #123
+```
+
+### Bug Fix
+```
+fix(deployment): resolve npm ci compatibility issue
+
+- Changed --only=production to --omit=dev for npm 7+ compatibility
+- Updated Dockerfile to use modern npm syntax
+
+Fixes #456
+```
+
+### Documentation
+```
+docs(readme): update English documentation
+
+- Translated README.md to English
+- Updated technical specifications
+- Improved usage examples
+```
+
+### CI/CD
+```
+ci(workflow): optimize GitHub Actions cache
+
+- Added build cache for faster builds
+- Configured multi-platform builds
+- Improved error handling
+
+Refs #789
+```
+
+### Refactor
+```
+refactor(scripts): simplify deployment logic
+
+- Extracted common functions to utilities
+- Reduced code duplication
+- Improved error messages
+```
+
+## Best Practices
+
+1. **Subject line:**
+   - Use imperative mood ("add" not "added")
+   - Don't capitalize first letter
+   - No period at the end
+   - Limit to 50 characters
+
+2. **Body:**
+   - Wrap at 72 characters
+   - Explain what and why vs how
+   - Use bullet points if needed
+
+3. **Footer:**
+   - Reference issues: `Closes #123`, `Fixes #456`
+   - Breaking changes: `BREAKING CHANGE: description`
+
+## Breaking Changes Format
+
+If your change introduces breaking changes, add this to footer:
+
+```
+BREAKING CHANGE: description of what changed and migration path
+
+Before: old usage example
+After: new usage example
+```
