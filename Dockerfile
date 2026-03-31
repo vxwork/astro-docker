@@ -17,11 +17,7 @@ RUN ls -la && cat package.json
 # Install dependencies
 RUN npm install
 
-# Copy any additional local source files if they exist
-COPY src ./src
-COPY public ./public
-
-# Build the application
+# Build the cloned Astro example first
 RUN npm run build
 
 # Production stage
