@@ -11,6 +11,9 @@ RUN git clone --depth 1 https://github.com/withastro/astro.git temp-astro && \
     cp -r temp-astro/examples/basics/. . && \
     rm -rf temp-astro
 
+# Copy Astro configuration file
+COPY astro.config.mjs ./
+
 # Verify package.json exists
 RUN ls -la && cat package.json
 
