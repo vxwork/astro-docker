@@ -3,17 +3,23 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Install git (needed for potential future use)
+# Install git
 RUN apk add --no-cache git
 
-# Copy package files
-COPY package*.json ./
+# Clone the Astro example project (basics template)
+RUN git clone --depth 1 https://github.com/withastro/astro.git temp-astro && \
+    cp -r temp-astro/examples/basics/. . && \
+    rm -rf temp-astro
 
-# Install app dependencies
+# Verify package.json exists
+RUN ls -la && cat package.json
+
+# Install dependencies
 RUN npm install
 
-# Copy source code
-COPY . .
+# Copy any additional local source files if they exist
+COPY src/ ./src/ 2>/dev/null || true
+COPY public/ ./public/ 2>/dev/null || true
 
 # Build the application
 RUN npm run build
@@ -23,14 +29,12 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy built application from builder stage first
+# Copy built application from builder stage
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/public ./public
+COPY --from=builder /app/package.json ./
 
-# Copy package files for production (from builder stage where they were already copied)
-COPY --from=builder /app/package*.json ./
-
-# Install only production dependencies
+# Install production dependencies
 RUN npm install --omit=dev && npm cache clean --force
 
 # Expose port
