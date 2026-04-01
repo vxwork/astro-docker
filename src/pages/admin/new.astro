@@ -1,0 +1,20 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout title="新建文章">
+  <h1>新建文章</h1>
+  
+  <form method="POST" action="/api/posts">
+    <p><input type="text" name="title" placeholder="文章标题" required style="width:100%; padding:8px;" /></p>
+    <p><input type="text" name="slug" placeholder="slug (英文，唯一)" required style="width:100%; padding:8px;" /></p>
+    <p><input type="text" name="author" placeholder="作者" value="Grok" style="width:100%; padding:8px;" /></p>
+    
+    <p>
+      <textarea name="content" rows="15" placeholder="文章内容（支持 HTML）" 
+        style="width:100%; padding:8px; font-family: monospace;"></textarea>
+    </p>
+    
+    <button type="submit" style="padding:10px 20px; font-size:16px;">发布文章</button>
+  </form>
+</Layout>
