@@ -9,9 +9,9 @@ services:
     ports:
       - "4321:4321"  # External port 8080 -> Container port 4321
     environment:
-      - NODE_ENV=production
-      - PORT=4321
-      - HOST=0.0.0.0
+      HOST: "0.0.0.0"             # ← 必须用这种键值对写法
+      PORT: "4321"
+      NODE_ENV: "production"
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:4321/"]
       interval: 30s
@@ -21,9 +21,9 @@ services:
     networks:
       - astro-network
     # Optional: Mount volume for persistent content (if needed)
-    # volumes:
-    #   - ./content:/app/content
-    # Optional: Resource limits
+    volumes:
+      - ./content:/app/content     # ← 动态添加 Markdown 文章的核心挂载
+      - ./data:/app/data 
     deploy:
       resources:
         limits:

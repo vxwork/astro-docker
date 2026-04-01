@@ -1,55 +1,58 @@
-# ===== Build Stage - Build Astro application with SSR =====
+# ===== Build Stage =====
 FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# Install git for cloning the Astro repository
+# 安装 git
 RUN apk add --no-cache git
 
-# Clone the Astro repository and extract the basics example
-RUN git clone --depth 1 https://github.com/withastro/astro.git temp-astro && \
-    cp -r temp-astro/examples/basics/. . && \
-    rm -rf temp-astro
+# Clone Astro basics 示例并初始化项目
+RUN git clone --depth 1 https://github.com/withastro/astro.git /tmp/astro && \
+    cp -r /tmp/astro/examples/basics/. . && \
+    rm -rf /tmp/astro
 
-# Verify package.json exists and show project structure
-RUN echo "=== Project Structure ===" && ls -la && echo "=== package.json ===" && cat package.json
+# 安装依赖
+RUN npm ci
 
-# Install all dependencies (including @astrojs/node for SSR)
-RUN npm install
-
-# Install Node.js adapter for SSR support
+# 安装 Node adapter（SSR 支持）
 RUN npx astro add node --yes
 
-# Copy custom Astro configuration (if needed, otherwise use auto-generated one)
+# 复制自定义配置（覆盖默认）
 COPY astro.config.mjs ./astro.config.mjs
 
-# Build the Astro application in SSR mode
+# 安装额外依赖（MDX + Content Collections 支持，可选但推荐）
+RUN npm install @astrojs/mdx
+
+# 构建（使用 hybrid 模式，更灵活）
 RUN npm run build
 
-# Verify build output
-RUN echo "=== Build Output ===" && ls -la dist/ && ls -la dist/server/ 2>/dev/null || echo "Server directory check complete"
-
-# ===== Production Runtime Stage =====
+# ===== Runtime Stage =====
 FROM node:22-alpine AS runtime
 
 WORKDIR /app
 
-# Copy only production-ready files from builder stage
+# 只复制必要文件
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/package.json ./
 
-# Set production environment variables
+# 创建动态内容目录（用于挂载）
+RUN mkdir -p /app/content/blog /app/data
+
+# 非 root 用户（安全）
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S astro -u 1001 -G nodejs && \
+    chown -R astro:nodejs /app
+
+USER astro
+
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 ENV PORT=4321
 
-# Expose port 4321 for the standalone Node.js server
 EXPOSE 4321
 
-# Health check for the SSR application
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:4321/ || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:4321/ || exit 1
 
-# Start the standalone Node.js server (SSR entry point)
 CMD ["node", "./dist/server/entry.mjs"]
