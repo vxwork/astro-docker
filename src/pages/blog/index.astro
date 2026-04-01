@@ -2,17 +2,27 @@
 import { db, posts } from '../../db/index.js';
 import Layout from '../../layouts/Layout.astro';
 
-const allPosts = await db.select().from(posts).orderBy(posts.publishedAt, 'desc');
+let allPosts = [];
+try {
+  allPosts = await db.select().from(posts).orderBy(posts.publishedAt, 'desc');
+} catch (error) {
+  console.error('Failed to fetch posts:', error);
+}
 ---
 
 <Layout title="博客列表">
   <h1>我的博客</h1>
-  <ul>
-    {allPosts.map(post => (
-      <li>
-        <a href={`/blog/${post.slug}`}>{post.title}</a>
-        <small> - {new Date(post.publishedAt).toLocaleDateString()}</small>
-      </li>
-    ))}
-  </ul>
+  
+  {allPosts.length === 0 ? (
+    <p>暂无文章，<a href="/api/posts" target="_blank">点击这里测试 API</a></p>
+  ) : (
+    <ul>
+      {allPosts.map((post) => (
+        <li>
+          <a href={`/blog/${post.slug}`}>{post.title}</a>
+          <small> — {new Date(post.publishedAt).toLocaleDateString()}</small>
+        </li>
+      ))}
+    </ul>
+  )}
 </Layout>
