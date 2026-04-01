@@ -151,6 +151,70 @@ export default defineConfig({
 4. ✅ Verify external access works
 5. ✅ Monitor container health
 
+## Network Configuration Issue - Docker Container Listening on localhost
+
+### Problem Description
+When running the Astro app in Docker, the container was only listening on `localhost` (127.0.0.1), making it inaccessible from outside the container.
+
+### Root Cause Analysis
+The issue was caused by **incorrect command syntax** in the Dockerfile:
+
+``dockerfile
+# ❌ WRONG - serve package doesn't support --host flag separately
+CMD ["serve", "dist", "-l", "4321", "--host", "0.0.0.0"]
+```
+
+The `serve` package uses a different syntax than expected:
+- The `-l` (listen) flag accepts **address:port** format, not just port
+- There is **no `--host` flag** - this was causing the command to fail silently
+- Environment variables `HOST` and `PORT` are **not respected** by the serve CLI
+
+### Correct Solution
+According to the [serve package documentation](https://github.com/vercel/serve), the correct syntax is:
+
+```bash
+# Format 1: address:port
+serve dist -l 0.0.0.0:4321
+
+# Format 2: tcp://address:port  
+serve dist -l tcp://0.0.0.0:4321
+```
+
+### Fixed Dockerfile
+``dockerfile
+# ✅ CORRECT - Using proper address:port format
+CMD ["serve", "dist", "-l", "0.0.0.0:4321"]
+```
+
+### Why This Works
+- `0.0.0.0:4321` tells serve to bind to **all available network interfaces** on port 4321
+- In Docker, this allows connections from outside the container
+- `localhost` or `127.0.0.1` would only allow connections from within the container itself
+
+### Verification Steps
+After deployment, verify the container is listening correctly:
+
+```bash
+# Check listening address inside container
+docker exec astro-app netstat -tlnp
+# Should show: 0.0.0.0:4321 or :::4321 (NOT 127.0.0.1:4321)
+
+# Test from outside the container
+curl http://<your-server-ip>:4321
+# Should return the Astro app HTML
+```
+
+### Common Mistakes to Avoid
+1. **Using `--host` flag** - serve doesn't support this parameter
+2. **Separate port and host** - must use combined `address:port` format
+3. **Relying on environment variables** - serve CLI doesn't read HOST/PORT env vars
+4. **Default localhost binding** - always specify `0.0.0.0` for Docker deployments
+
+### References
+- [Serve Package Documentation](https://github.com/vercel/serve)
+- [Serve CLI Arguments](https://github.com/vercel/serve/blob/main/source/utilities/cli.ts)
+- [Docker Networking Best Practices](https://docs.docker.com/network/)
+
 ## References
 
 - [Astro Docker Recipe](https://docs.astro.build/en/recipes/docker/)

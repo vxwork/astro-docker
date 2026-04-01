@@ -45,5 +45,6 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:4321/ || exit 1
 
 # Start the application using serve to host static files
-# Correct syntax: serve <directory> -l <port> --host <address>
-CMD ["serve", "dist", "-l", "4321", "--host", "0.0.0.0"]
+# The -l flag accepts address:port format for proper network binding
+# Using 0.0.0.0:4321 ensures listening on all network interfaces (required for Docker)
+CMD ["serve", "dist", "-l", "0.0.0.0:4321"]

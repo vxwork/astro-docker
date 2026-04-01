@@ -8,6 +8,8 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=4321
+      - HOST=0.0.0.0  # Listen on all network interfaces for Docker
+
     # Note: No need for command override as astro.config.mjs configures the host
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:4321/"]
