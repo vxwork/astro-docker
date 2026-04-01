@@ -1,0 +1,30 @@
+---
+import { db, posts } from '../../db/index.js';
+import { eq } from 'drizzle-orm';
+import Layout from '../../layouts/Layout.astro';   // 可自行创建一个简单 Layout
+
+const { slug } = Astro.params;
+
+// 从数据库查询文章
+const post = await db.select().from(posts).where(eq(posts.slug, slug)).get();
+
+if (!post) {
+  return Astro.redirect('/404');
+}
+---
+
+<Layout title={post.title}>
+  <article>
+    <header>
+      <h1>{post.title}</h1>
+      <p>作者：{post.author} | 发布时间：{new Date(post.publishedAt).toLocaleDateString()}</p>
+    </header>
+    
+    <div class="prose" set:html={post.content} />   <!-- 如果 content 是 HTML -->
+    <!-- 如果你存的是 Markdown，可以在这里用 marked 等库渲染 -->
+  </article>
+</Layout>
+
+<style>
+  .prose { max-width: 65ch; margin: 2rem auto; line-height: 1.7; }
+</style>
