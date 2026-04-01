@@ -5,6 +5,12 @@
 #   ./deploy.sh              # Use latest main branch image
 #   ./deploy.sh abc12345     # Use specified SHA version (8 characters)
 #   ./deploy.sh latest       # Use latest tag
+#
+# Architecture:
+#   - Multi-stage Docker build with Nginx web server
+#   - Stage 1: Build Astro application with Node.js
+#   - Stage 2: Serve static files with Nginx 1.29 Alpine
+#   - Optimized for production with gzip compression and caching
 
 set -e
 

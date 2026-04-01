@@ -7,10 +7,7 @@ services:
       - "4321:4321"
     environment:
       - NODE_ENV=production
-      - PORT=4321
-      - HOST=0.0.0.0  # Listen on all network interfaces for Docker
-
-    # Note: No need for command override as astro.config.mjs configures the host
+    # Note: Nginx handles static file serving with proper network binding
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:4321/"]
       interval: 30s
@@ -19,10 +16,10 @@ services:
       start_period: 10s
     networks:
       - astro-network
-    # 可选：挂载日志目录
+    # Optional: Mount log directory
     volumes:
-      - astro-logs:/app/logs
-    # 可选：资源限制
+      - astro-logs:/var/log/nginx
+    # Optional: Resource limits
     deploy:
       resources:
         limits:

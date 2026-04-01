@@ -1,4 +1,4 @@
-# Build stage
+# Build stage - Build Astro application
 FROM node:22-alpine AS builder
 
 WORKDIR /app
@@ -23,28 +23,25 @@ RUN npm install
 # Build the cloned Astro example first
 RUN npm run build
 
-# Production stage
-FROM node:22-alpine
+# Production stage - Use Nginx to serve static files
+FROM nginx:1.29.7-alpine
 
-WORKDIR /app
+# Remove default nginx static content
+RUN rm -rf /usr/share/nginx/html/*
 
-# Copy built application from builder stage
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/package.json ./
-COPY --from=builder /app/astro.config.mjs ./astro.config.mjs
+# Copy built Astro application from builder stage
+COPY --from=builder /app/dist /usr/share/nginx/html
+COPY --from=builder /app/public /usr/share/nginx/html/public
 
-# Install serve package globally for static file serving
-RUN npm install -g serve && npm cache clean --force
+# Copy custom nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Expose port
+# Expose port 4321
 EXPOSE 4321
 
-# Health check
+# Health check using wget (available in Alpine)
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:4321/ || exit 1
 
-# Start the application using serve to host static files
-# The -l flag accepts address:port format for proper network binding
-# Using 0.0.0.0:4321 ensures listening on all network interfaces (required for Docker)
-CMD ["serve", "dist", "-l", "0.0.0.0:4321"]
+# Start Nginx in foreground mode (Docker best practice)
+CMD ["nginx", "-g", "daemon off;"]
