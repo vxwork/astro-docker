@@ -1,6 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import { getAllPosts } from '../db/index.js';
+import { getAllPosts } from '../../db/index.js';
 
 const allPosts = getAllPosts();
 const latestPosts = allPosts.slice(0, 6); // 显示最新6篇文章
