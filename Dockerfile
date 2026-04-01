@@ -14,18 +14,15 @@ RUN git clone --depth 1 https://github.com/withastro/astro.git /tmp/astro && \
 # 安装依赖
 RUN npm install
 
-# 安装必要适配器和 ORM
+# 安装 Node adapter 和 SQLite ORM
 RUN npx astro add node --yes
 RUN npm install drizzle-orm better-sqlite3
-RUN npm install -D drizzle-kit
 
-# 复制自定义文件（覆盖默认）
+# 复制自定义文件
 COPY astro.config.mjs ./astro.config.mjs
-COPY drizzle.config.ts ./drizzle.config.ts
 COPY src/ ./src/
 
-# 生成迁移文件并构建（全 SSR）
-RUN npx drizzle-kit generate
+# 构建 Astro 项目（全 SSR）
 RUN npm run build
 
 # ===== Runtime Stage =====
@@ -33,15 +30,14 @@ FROM node:22-alpine AS runtime
 
 WORKDIR /app
 
-# 复制生产所需文件
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package.json ./
 
-# 创建持久化目录
+# 创建数据目录
 RUN mkdir -p /app/data
 
-# 非 root 用户（安全）
+# 非 root 用户运行（安全）
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S astro -u 1001 -G nodejs && \
     chown -R astro:nodejs /app
