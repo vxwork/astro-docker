@@ -8,10 +8,12 @@ services:
     restart: unless-stopped
     ports:
       - "4321:4321"  # External port 8080 -> Container port 4321
-    environment:
-      HOST: "0.0.0.0"             # ← 必须用这种键值对写法
+     environment:
+      HOST: "0.0.0.0"
       PORT: "4321"
       NODE_ENV: "production"
+      ADMIN_USERNAME: "admin"           # 可自行修改
+      ADMIN_PASSWORD: "your_secure_password_2026"   # ← 这里改成你的强密码
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:4321/"]
       interval: 30s
@@ -24,6 +26,7 @@ services:
     volumes:
       - ./content:/app/content     # ← 动态添加 Markdown 文章的核心挂载
       - ./data:/app/data 
+      - ./public/uploads:/app/public/uploads   # 图片持久化
     deploy:
       resources:
         limits:

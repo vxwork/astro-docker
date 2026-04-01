@@ -1,0 +1,84 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import { getPostBySlug, createPost, db } from '../../../db/index.js';
+
+const { slug } = Astro.params;
+let post: any = null;
+let isNew = true;
+
+if (slug && slug !== 'new') {
+  post = getPostBySlug(slug);
+  isNew = false;
+}
+---
+
+<Layout title={isNew ? "新建文章" : "编辑文章"}>
+  <div class="max-w-5xl mx-auto p-6">
+    <h1 class="text-3xl font-bold mb-6">{isNew ? '新建文章' : '编辑文章'}</h1>
+
+    <form method="POST" action="/api/posts" enctype="multipart/form-data">
+      <input type="hidden" name="originalSlug" value={post?.slug || ''} />
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- 左侧：基本信息 -->
+        <div class="md:col-span-1 space-y-6">
+          <div>
+            <label class="block text-sm font-medium mb-2">文章标题</label>
+            <input type="text" name="title" value={post?.title || ''} required
+              class="w-full px-4 py-3 border rounded-lg text-lg" />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium mb-2">Slug (URL路径)</label>
+            <input type="text" name="slug" value={post?.slug || ''} required
+              class="w-full px-4 py-3 border rounded-lg font-mono" />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium mb-2">作者</label>
+            <input type="text" name="author" value={post?.author || 'Grok'} 
+              class="w-full px-4 py-3 border rounded-lg" />
+          </div>
+        </div>
+
+        <!-- 右侧：Markdown 编辑器 -->
+        <div class="md:col-span-2">
+          <label class="block text-sm font-medium mb-2">文章内容（Markdown）</label>
+          <textarea id="content" name="content" rows="20">{post?.content || ''}</textarea>
+        </div>
+      </div>
+
+      <!-- 图片上传 -->
+      <div class="mt-8 border-t pt-6">
+        <label class="block text-sm font-medium mb-3">上传图片（可选）</label>
+        <input type="file" name="image" accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-6 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+        <p class="text-xs text-gray-500 mt-2">图片会自动上传到 /uploads 目录</p>
+      </div>
+
+      <div class="flex gap-4 mt-10">
+        <button type="submit" 
+          class="bg-green-600 hover:bg-green-700 text-white px-10 py-3 rounded-xl text-lg font-medium">
+          {isNew ? '发布文章' : '保存修改'}
+        </button>
+        <a href="/admin" 
+          class="bg-gray-600 hover:bg-gray-700 text-white px-10 py-3 rounded-xl text-lg font-medium">
+          取消
+        </a>
+      </div>
+    </form>
+  </div>
+
+  <!-- SimpleMDE Markdown 编辑器 -->
+  <script src="https://cdn.jsdelivr.net/npm/simplemde@1.11.2/dist/simplemde.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/simplemde@1.11.2/dist/simplemde.min.css">
+
+  <script>
+    const simplemde = new SimpleMDE({
+      element: document.getElementById("content"),
+      spellChecker: false,
+      autofocus: true,
+      placeholder: "开始写你的 Markdown 内容...",
+      status: ["lines", "words", "cursor"]
+    });
+  </script>
+</Layout>
