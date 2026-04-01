@@ -1,13 +1,17 @@
 services:
-  astro:
+  astro-blog:
+    build:
+      context: .
+      dockerfile: Dockerfile
     image: ${REGISTRY:-ghcr.io}/${REPO_OWNER:-vxwork}/${REPO_NAME:-astro-docker}:${IMAGE_TAG:-latest}
-    container_name: astro-app
+    container_name: astro-blog
     restart: unless-stopped
     ports:
-      - "4321:4321"
+      - "4321:4321"  # External port 8080 -> Container port 4321
     environment:
       - NODE_ENV=production
-    # Note: Nginx handles static file serving with proper network binding
+      - PORT=4321
+      - HOST=0.0.0.0
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:4321/"]
       interval: 30s
@@ -16,9 +20,9 @@ services:
       start_period: 10s
     networks:
       - astro-network
-    # Optional: Mount log directory
-    volumes:
-      - astro-logs:/var/log/nginx
+    # Optional: Mount volume for persistent content (if needed)
+    # volumes:
+    #   - ./content:/app/content
     # Optional: Resource limits
     deploy:
       resources:
@@ -33,6 +37,4 @@ networks:
   astro-network:
     driver: bridge
 
-volumes:
-  astro-logs:
-    driver: local
+# Note: Volumes removed as standalone Node.js server doesn't need nginx logs

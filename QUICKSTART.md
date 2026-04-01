@@ -232,9 +232,136 @@ docker inspect astro-app | grep Image
 
 ---
 
+## 🚀 SSR Configuration (New)
+
+This project now uses **SSR (Server-Side Rendering)** with Node.js adapter for dynamic page generation.
+
+### Key Features:
+
+- **SSR Mode**: All pages are rendered on-demand at request time
+- **Standalone Node.js Server**: Uses `@astrojs/node` adapter in standalone mode
+- **Multi-stage Docker Build**: Optimized image size (~150-300MB)
+- **Dynamic Content Support**: Perfect for blogs, dashboards, and real-time content
+
+### Architecture:
+
+```
+┌─────────────┐
+│   Browser   │
+└──────┬──────┘
+       │ HTTP Request
+       ▼
+┌─────────────────────────┐
+│  Node.js Container      │
+│  (Port 4321)            │
+│  ┌───────────────────┐  │
+│  │ dist/server/      │  │
+│  │ entry.mjs         │  │
+│  │ (SSR Entry Point) │  │
+│  └───────────────────┘  │
+└─────────────────────────┘
+```
+
+### Configuration Files:
+
+**astro.config.mjs:**
+```javascript
+export default defineConfig({
+  output: 'server',           // Enable SSR
+  adapter: node({
+    mode: 'standalone'        // Standalone server mode
+  }),
+  server: {
+    host: '0.0.0.0',          // Required for Docker
+    port: 4321
+  }
+});
+```
+
+**Dockerfile:**
+- Stage 1 (Builder): Clones Astro basics example, installs dependencies, builds SSR app
+- Stage 2 (Runtime): Minimal Node.js runtime with only production files
+
+### Local Development:
+
+```bash
+# Install Node adapter (if modifying the project)
+npx astro add node --yes
+
+# Run development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
+```
+
+### Docker Commands:
+
+```bash
+# Build Docker image
+docker build -t astro-blog-ssr:latest .
+
+# Run container
+docker run -d \
+  --name astro-blog \
+  -p 8080:4321 \
+  astro-blog-ssr:latest
+
+# Or use docker-compose
+docker compose up -d --build
+
+# Access application
+curl http://localhost:8080
+```
+
+### Hybrid Rendering (Optional):
+
+For static pages, add to your page file:
+```javascript
+// src/pages/about.astro
+export const prerender = true;  // This page will be pre-rendered as static HTML
+```
+
+### Environment Variables:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `NODE_ENV` | `production` | Node environment |
+| `HOST` | `0.0.0.0` | Server binding address |
+| `PORT` | `4321` | Server port |
+
+### Troubleshooting SSR:
+
+**Issue: Cannot access container from outside**
+- Verify `HOST=0.0.0.0` in Dockerfile and docker-compose.yml
+- Check `host: true` or `host: '0.0.0.0'` in astro.config.mjs
+- Ensure port 4321 is exposed in Dockerfile and mapped in docker-compose.yml
+
+**Issue: Build fails**
+- Run `npm run build` locally first to verify it works
+- Check that `dist/server/entry.mjs` exists after build
+
+**Issue: Dynamic features not working**
+- Confirm `output: 'server'` is set in astro.config.mjs
+- Verify `@astrojs/node` is installed and configured
+
+### Production Recommendations:
+
+1. **Reverse Proxy**: Use Nginx/Traefik in front for HTTPS, caching, and load balancing
+2. **Environment Variables**: Pass sensitive config via `.env` or docker-compose environment
+3. **Volume Mounts**: Mount `/app/content` or similar for persistent blog content
+4. **CI/CD**: Automate builds with GitHub Actions
+5. **Monitoring**: Set up health checks and logging
+
+---
+
 ## 📞 Getting Help
 
 - Full documentation: [README.md](README.md)
 - Astro Docs: https://docs.astro.build/
 - Docker Docs: https://docs.docker.com/
 - GitHub Actions Docs: https://docs.github.com/en/actions
+- SSR Guide: https://docs.astro.build/en/guides/ssr/

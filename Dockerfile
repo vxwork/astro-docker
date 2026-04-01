@@ -1,47 +1,55 @@
-# Build stage - Build Astro application
+# ===== Build Stage - Build Astro application with SSR =====
 FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# Install git
+# Install git for cloning the Astro repository
 RUN apk add --no-cache git
 
-# Clone the Astro example project (basics template)
+# Clone the Astro repository and extract the basics example
 RUN git clone --depth 1 https://github.com/withastro/astro.git temp-astro && \
     cp -r temp-astro/examples/basics/. . && \
     rm -rf temp-astro
 
-# Copy Astro configuration file to override default settings
-COPY astro.config.mjs ./astro.config.mjs
+# Verify package.json exists and show project structure
+RUN echo "=== Project Structure ===" && ls -la && echo "=== package.json ===" && cat package.json
 
-# Verify package.json exists
-RUN ls -la && cat package.json
-
-# Install dependencies
+# Install all dependencies (including @astrojs/node for SSR)
 RUN npm install
 
-# Build the cloned Astro example first
+# Install Node.js adapter for SSR support
+RUN npx astro add node --yes
+
+# Copy custom Astro configuration (if needed, otherwise use auto-generated one)
+COPY astro.config.mjs ./astro.config.mjs
+
+# Build the Astro application in SSR mode
 RUN npm run build
 
-# Production stage - Use Nginx to serve static files
-FROM nginx:1.29.7-alpine
+# Verify build output
+RUN echo "=== Build Output ===" && ls -la dist/ && ls -la dist/server/ 2>/dev/null || echo "Server directory check complete"
 
-# Remove default nginx static content
-RUN rm -rf /usr/share/nginx/html/*
+# ===== Production Runtime Stage =====
+FROM node:22-alpine AS runtime
 
-# Copy built Astro application from builder stage
-COPY --from=builder /app/dist /usr/share/nginx/html
-COPY --from=builder /app/public /usr/share/nginx/html/public
+WORKDIR /app
 
-# Copy custom nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy only production-ready files from builder stage
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/package.json ./package.json
 
-# Expose port 4321
+# Set production environment variables
+ENV NODE_ENV=production
+ENV HOST=0.0.0.0
+ENV PORT=4321
+
+# Expose port 4321 for the standalone Node.js server
 EXPOSE 4321
 
-# Health check using wget (available in Alpine)
+# Health check for the SSR application
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:4321/ || exit 1
 
-# Start Nginx in foreground mode (Docker best practice)
-CMD ["nginx", "-g", "daemon off;"]
+# Start the standalone Node.js server (SSR entry point)
+CMD ["node", "./dist/server/entry.mjs"]
