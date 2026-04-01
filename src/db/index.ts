@@ -10,10 +10,10 @@ const dbPath = import.meta.env.PROD
 const sqlite = new Database(dbPath);
 export const db = drizzle(sqlite, { schema });
 
-// 导出 posts 供其他文件使用
+// 导出 posts
 export const { posts } = schema;
 
-// ==================== 自动创建表（列名与 schema 保持一致） ====================
+// ==================== 强制创建与 schema 完全一致的表 ====================
 sqlite.exec(`
   CREATE TABLE IF NOT EXISTS posts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -22,8 +22,8 @@ sqlite.exec(`
     description TEXT,
     content TEXT NOT NULL,
     author TEXT DEFAULT '匿名',
-    publishedAt INTEGER DEFAULT (unixepoch() * 1000)
+    "publishedAt" INTEGER DEFAULT (unixepoch() * 1000)
   );
 `);
 
-console.log('✅ SQLite 数据库已就绪，posts 表已自动创建');
+console.log('✅ SQLite 数据库已就绪，posts 表已自动创建（列名 publishedAt）');
