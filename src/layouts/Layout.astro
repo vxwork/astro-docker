@@ -8,17 +8,13 @@ const { title = '我的博客' } = Astro.props;
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{title}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { font-family: system-ui, sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; }
-    h1 { color: #333; }
-    .prose { max-width: 65ch; }
+    .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
   </style>
 </head>
-<body>
-  <header><h1><a href="/blog">我的博客</a></h1></header>
-  <main><slot /></main>
-  <footer style="margin-top: 4rem; text-align: center; color: #666;">
-    Powered by Astro + SQLite + Docker
-  </footer>
+<body class="bg-gray-50 text-gray-900">
+  <slot />
 </body>
 </html>
